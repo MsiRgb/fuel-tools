@@ -1,0 +1,19 @@
+---
+environments:
+  - name: test env 1
+    nodes: []
+    tasks: []
+    release: 2
+    net-provider: nova_network
+    net-segment-type: gre
+    mode: ha_compact
+  
+  - name: test env 2
+    nodes:
+    tasks:
+    release: 2
+    net-provider: nova_network
+    net-segment-type: gre
+    mode: multinode
+    
+fuel-server-api-url: http://10.20.0.2:8000/api/v1
