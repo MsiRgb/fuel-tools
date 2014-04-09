@@ -60,6 +60,7 @@ class PostInstallConfigurator():
     pass
     # Load the config file
     envList = self._fuelConfig.getEnvList()
+    vmList = self._fuelConfig.getVmList()
     
     # For each enviornment, add the env in Fuel
     for env in envList:
@@ -79,11 +80,15 @@ class PostInstallConfigurator():
       self._vmParms[vm['name']] = self._libvirtInterface.createVm(vm['name'], type=vm['type'], nics=vm['nics'])
       
     # Wait for all nodes to check in
-    totalVmCount = len(self._fuelConfig.getVmList())
-    while len(self._fuelInterface.getUnallocatedNodes()) < totalVmCount:
-      checkedIn = len(self._fuelInterface.getUnallocatedNodes())
-      logging.info("Waiting for nodes to check in (%s/%s)" % (checkedIn, totalVmCount))
+    allNodesCheckedIn = False
+    while not allNodesCheckedIn:
       sleep(5)
+      checkedInNodes = 0
+      for vm in vmList:
+        if self.getNodeIdByVmName(vm['name']):
+          checkedInNodes += 1
+      logging.info("Waiting for nodes to check in (%s/%s)" % (checkedInNodes, len(vmList)))
+      allNodesCheckedIn = checkedInNodes >= len(vmList)
     
     # For each VM, add primary MAC address as a new node to env
     for env in envList:
