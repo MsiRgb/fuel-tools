@@ -14,13 +14,15 @@ class RestHelper():
     encodedData = json.dumps(data)
     retVal = requests.post(url, data=encodedData)
     if retVal.status_code == 400:
-      raise Exception("Error: Invalid data supplied for env creation! %s" % (data))
+      raise Exception("Error: Invalid data supplied! %s" % (data))
     elif retVal.status_code == 409:
       raise Exception("Error: Environment %s already exists!" % (data['name']))
     elif retVal.status_code < 200 or retVal.status_code > 300:
       raise Exception("Unknown error creating environment: %s" % (data['name']))
-    return retVal.json()
-          
+    try:
+      return retVal.json()
+    except:
+      return None          
   
   def deleteRequest(self, url, data={}):
     encodedData = json.dumps(data)
