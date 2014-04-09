@@ -33,6 +33,10 @@ class PostInstallConfigurator():
                         help='Deletes existing environments to create new (DESTRUCTIVE)',
                         action='store_true',
                         default=False)
+    parser.add_argument('-e','--deploy-environment',
+                        help='Deploys the newly created environment',
+                        action='store_true',
+                        default=False)
     self._args = vars(parser.parse_args())
     # Configure logging
     numeric_level = getattr(logging, self._args["debug_level"].upper(), None)
@@ -68,6 +72,9 @@ class PostInstallConfigurator():
         for currEnv in self._fuelInterface.listEnvs():
           if currEnv['name'] == env['name']:
             self._fuelInterface.deleteEnv(currEnv['id'])
+            # There is some kind of deletion race 
+            # condition in the Fuel server
+            sleep(5)
       self._fuelInterface.createEnvironment(env['name'],
                                             env['release'], 
                                             env['mode'],
@@ -77,7 +84,12 @@ class PostInstallConfigurator():
     # For each VM, create the VM (note: this is only for AIO)
     # Note: If the VM is pre-configured as a node, add it to the env
     for vm in self._fuelConfig.getVmList():
-      self._vmParms[vm['name']] = self._libvirtInterface.createVm(vm['name'], type=vm['type'], nics=vm['nics'])
+      if not vm.get('mac', None):
+        self._vmParms[vm['name']] = self._libvirtInterface.createVm(vm['name'], 
+                                                                    type=vm['type'], 
+                                                                    nics=vm['nics'],
+                                                                    hdd_size=vm['hdd-size'],
+                                                                    cpu=vm['cpus'])
       
     # Wait for all nodes to check in
     allNodesCheckedIn = False
@@ -97,6 +109,10 @@ class PostInstallConfigurator():
         roles = node['roles']
         envId = self._fuelInterface.getEnvIdByName(env['name'])
         self._fuelInterface.addNodeToEnvWithRole(nodeId, roles, envId)
+        
+    # Deploy environment if we are configured to
+    if self._args['deploy_environment']:
+      self._fuelInterface.deployEnv(self._fuelInterface.getEnvIdByName(env['name']))
     
 if __name__ == "__main__":
   pic = PostInstallConfigurator()

@@ -10,6 +10,18 @@ class RestHelper():
   def __init__(self):
     pass
   
+  def putRequest(self, url, data):
+    encodedData = json.dumps(data)
+    retVal = requests.put(url, data=encodedData)
+    if retVal.status_code == 400:
+      raise Exception("Error: Invalid data supplied! %s" % (data))
+    elif retVal.status_code < 200 or retVal.status_code > 300:
+      raise Exception("Unknown error creating environment: %s" % (data['name']))
+    try:
+      return retVal.json()
+    except:
+      return None      
+  
   def postRequest(self, url, data):
     encodedData = json.dumps(data)
     retVal = requests.post(url, data=encodedData)

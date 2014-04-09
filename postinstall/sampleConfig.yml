@@ -24,7 +24,13 @@ vms:
   - name: testvm1
     nics: [ 'br0','br1','br2' ]
     type: qemu
+    hdd-size: 30G
+    cpus: 1
+    # Do not create VM if mac specified
+    #mac: ab:cd:ef:12:34:56 
   - name: testvm2
     nics: [ 'br0','br1','br2' ]
     type: qemu
+    hdd-size: 30G
+    cpus: 1
     

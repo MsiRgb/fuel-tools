@@ -91,14 +91,15 @@ class LibvirtInterface():
   #  [{'network':'br0'}]
   # 
   def createVm(self, name, cpu=1, memory=1048576, nics=[], hdd_format="qcow2", hdd_size="10G", type="kvm"):
-    logging.info("Creating domain with name: %s, cpu: %s, mem: %s, nics: %s, hdd_format: %s",
-                 name, cpu, memory, nics, hdd_format)
+    logging.info("Creating domain with name: %s, cpu: %s, mem: %s, nics: %s, hdd_format: %s, hdd_size: %s",
+                 name, cpu, memory, nics, hdd_format, hdd_size)
     params = {'name':name,
               'cpu':cpu,
               'memory':memory,
               'nics':[],
               'format':hdd_format,
-              'type':type}
+              'type':type,
+              'hdd_size':hdd_size}
     # Add extra parms to nics list
     for i, nic in enumerate(nics):
       mac = virtutils.randomMAC("qemu")
@@ -125,10 +126,10 @@ class LibvirtInterface():
         try:
           if domain.info()[0] == VIR_DOMAIN_RUNNING:
             domain.destroy()
-        except Exception as ex:
+        except Exception:
           pass
         domain.undefine()
-    except Exception as ex:
+    except Exception:
       pass
     
     # Define machine

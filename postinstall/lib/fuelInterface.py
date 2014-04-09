@@ -45,12 +45,23 @@ class FuelInterface():
     deleteUrl = "%s/%s/%s/" % (self._fuelBaseUrl, "clusters", envId)
     self._restHelper.deleteRequest(deleteUrl)
     
+  def getNodesByEnvId(self, envId):
+    logging.info("Getting list of nodes for envId: %s" % envId)
+    nodeList = self._restHelper.getRequest("%s/nodes" % (self._fuelBaseUrl))
+    retVal = []
+    for node in nodeList:
+      if node['cluster'] == envId:
+        retVal.append(node)
+    return retVal    
+    
   def getUnallocatedNodes(self):
     logging.info("Getting list of unallocated nodes")
     nodeList = self._restHelper.getRequest("%s/nodes" % (self._fuelBaseUrl))
     retVal = []
     for node in nodeList:
-      if node['status'] == 'discover' and node['online'] == True:
+      if node['status'] == 'discover' and \
+         node['online'] == True and \
+         node['pending_roles'] == []:
         retVal.append(node)
     return retVal
   
@@ -65,6 +76,13 @@ class FuelInterface():
     logging.info("Adding node id: %s to envId: %s with roles: %s", nodeId, envId, roles)
     data = [{"id": nodeId, "roles": roles.split(",")}]
     retVal = self._restHelper.postRequest("%s/clusters/%s/assignment/" % (self._fuelBaseUrl, envId), data)
+    return retVal
+    
+  def deployEnv(self, envId):
+    logging.info("Deploying envId: %s" % envId)
+    retVal = self._restHelper.putRequest("%s/clusters/%s/changes" % (self._fuelBaseUrl, envId), {})
+    if retVal['status'] == 'error':
+      logging.info("Error deploying environment %s: %s" % (envId, retVal['message']))
     return retVal
     
 if __name__ == "__main__":
@@ -89,6 +107,10 @@ if __name__ == "__main__":
     print "Adding node: %s to env: %s with role: %s" % (nodeId, envId, role)
     classInstance.addNodeToEnvWithRole(nodeId, role, envId)
     print "...done"
+
+  print "Deploying env..."
+  classInstance.deployEnv(newEnv['id'])
+  print "...done"
 
   print "Deleting env..."
   classInstance.deleteEnv(newEnv['id'])
