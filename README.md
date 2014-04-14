@@ -1,4 +1,4 @@
 fuel-tools
 ==========
 
-Tools for Fuel automation
+This repo has been permanently moved into devtools/deploy_scripts/postinstall_fuel
